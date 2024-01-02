@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Table, Space, Button, Input, notification, Modal, Form, DatePicker } from 'antd';
+import { Tag } from 'antd';
+
 
 const { Search } = Input;
 
@@ -29,6 +31,27 @@ const ParcelManagement = () => {
     setModalVisible(false);
   };
 
+  const handleSendEmail = (parcelId) => {
+    // Send a request to the API to send an email
+    axios.get(`http://localhost:8084/api/notification/sendEmailToClient/${parcelId}`)
+      .then(response => {
+     
+        // Display a success message based on the API response
+        notification.success({
+          message: 'Email Sent',
+          description: response.data,
+        });
+      })
+      .catch(error => {
+        // Display an error message if the API request fails
+        console.error('Error sending email:', error);
+        notification.error({
+          message: 'Error',
+          description: 'An error occurred while sending the email. Please try again.',
+        });
+      });
+  };
+  
   const handleUpdateStatus = (parcelId, newStatus) => {
     // Send a PUT request to update the status of a parcel
     axios.put(`${baseUrl}/api/parcels/${parcelId}/updateStatus`, { status: newStatus })
@@ -235,6 +258,13 @@ const ParcelManagement = () => {
       render: user => user && user.username,
     },
     {
+      title: 'is Email Sent',
+      dataIndex: 'emailSent',
+      key: 'emailSent',
+      render: emailSent => (emailSent ? 'Yes' : 'No'),
+    }
+    ,
+    {
       title: 'Actions',
       key: 'actions',
       render: (text, record) => (
@@ -243,6 +273,7 @@ const ParcelManagement = () => {
           <Button onClick={() => handleUpdateStatus(record.id, 'Done')}>Set Done</Button>
           <Button onClick={() => showModal(record)}>View Location History</Button>
           <Button onClick={() => handleDeleteParcel(record.id)}>Delete</Button>
+          <Button onClick={() => handleSendEmail(record.id)}>Send Email</Button>
         </Space>
       ),
     },
