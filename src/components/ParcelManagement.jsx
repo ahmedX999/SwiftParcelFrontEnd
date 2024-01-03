@@ -21,6 +21,8 @@ const ParcelManagement = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedParcel, setSelectedParcel] = useState(null);
   const formRef = useRef();
+  const [selectedUserDetails, setSelectedUserDetails] = useState(null);
+
 
   const showModal = (parcel) => {
     setSelectedParcel(parcel);
@@ -31,14 +33,30 @@ const ParcelManagement = () => {
     setModalVisible(false);
   };
 
+  const fetchUserDetails = (username) => {
+    // Make an API request to fetch user details based on the username
+    axios.get(`${baseUrl}/api/v1/auth/findByUsername/${username}`)
+      .then(response => {
+        // Set the user details in the state
+        setSelectedUserDetails(response.data);
+        // Open the user details modal
+        setModalVisible(true);
+      })
+      .catch(error => {
+        console.error('Error fetching user details:', error);
+      });
+  };
+
+  
+
   const handleSendEmail = (parcelId) => {
     // Send a request to the API to send an email
     axios.get(`http://localhost:8084/api/notification/sendEmailToClient/${parcelId}`)
       .then(response => {
      
         // Display a success message based on the API response
-        notification.success({
-          message: 'Email Sent',
+        notification.info({
+          message: 'Info:',
           description: response.data,
         });
       })
@@ -251,11 +269,16 @@ const ParcelManagement = () => {
       dataIndex: 'status',
       key: 'status',
     },
+    
     {
       title: 'Parcel Owner',
       dataIndex: 'user',
       key: 'owner',
-      render: user => user && user.username,
+      render: user => (
+        <a onClick={() => fetchUserDetails(user && user.username)}>
+          {user && user.username}
+        </a>
+      ),
     },
     {
       title: 'is Email Sent',
@@ -384,6 +407,26 @@ const ParcelManagement = () => {
           </>
         )}
       </Modal>
+      {/* User Details Modal */}
+
+      <Modal
+        title="User Details"
+        visible={modalVisible && selectedUserDetails !== null}
+        onCancel={handleModalCancel}
+        footer={null}
+      >
+        {selectedUserDetails && (
+          <>
+            <h3>User ID: {selectedUserDetails.id}</h3>
+            <h3>Username: {selectedUserDetails.username}</h3>
+            <h3>Email: {selectedUserDetails.email}</h3>
+            <h3>Firstname: {selectedUserDetails.firstname}</h3>
+            <h3>Lastname: {selectedUserDetails.lastname}</h3>
+            {/* Add other user details as needed */}
+          </>
+        )}
+      </Modal>
+      
     </div>
   );
 };
